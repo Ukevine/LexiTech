@@ -1,0 +1,27 @@
+import { useEffect } from 'react';
+import { Stack } from 'expo-router';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { SearchHistoryProvider } from '../context/SearchHistoryContext';
+import { configureAudio } from '../services/audioService';
+import { colors } from '../constants/theme';
+
+export default function RootLayout() {
+  useEffect(() => {
+    configureAudio();
+  }, []);
+
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <SearchHistoryProvider>
+          <StatusBar style="dark" />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(drawer)" />
+          </Stack>
+        </SearchHistoryProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
+  );
+}
