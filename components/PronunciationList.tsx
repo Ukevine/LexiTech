@@ -1,7 +1,8 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, typography } from '../constants/theme';
+import { useTheme } from '../context/ThemeContext';
+import { spacing, typography } from '../constants/theme';
 import { useAudioPlayback } from '../hooks/useAudioPlayback';
 import { audioPlaybackService, getStatusLabel } from '../services/audioService';
 import { PronunciationItem } from '../types/dictionary';
@@ -26,12 +27,21 @@ function ControlButton({
   disabled = false,
   accessibilityLabel,
 }: ControlButtonProps) {
+  const { colors, isDark } = useTheme();
   return (
     <Pressable
       style={({ pressed }) => [
         styles.controlButton,
-        disabled && styles.controlButtonDisabled,
-        pressed && !disabled && styles.controlButtonPressed,
+        {
+          backgroundColor: isDark ? '#1E293B' : '#EFF6FF',
+        },
+        disabled && {
+          backgroundColor: isDark ? '#111827' : '#F1F5F9',
+          opacity: 0.7,
+        },
+        pressed && !disabled && {
+          backgroundColor: isDark ? '#334155' : '#DBEAFE',
+        },
       ]}
       onPress={onPress}
       disabled={disabled}
@@ -44,7 +54,11 @@ function ControlButton({
         size={16}
         color={disabled ? colors.textSecondary : colors.primary}
       />
-      <Text style={[styles.controlLabel, disabled && styles.controlLabelDisabled]}>
+      <Text style={[
+        styles.controlLabel,
+        { color: colors.primary },
+        disabled && { color: colors.textSecondary }
+      ]}>
         {label}
       </Text>
     </Pressable>
@@ -52,6 +66,7 @@ function ControlButton({
 }
 
 function PronunciationRow({ item }: { item: PronunciationItem }) {
+  const { colors, isDark } = useTheme();
   const playback = useAudioPlayback();
   const isActive = playback.activeId === item.id;
   const status = isActive ? playback.status : 'stopped';
@@ -96,23 +111,23 @@ function PronunciationRow({ item }: { item: PronunciationItem }) {
 
   if (!item.hasPlayableAudio) {
     return (
-      <View style={styles.row}>
+      <View style={[styles.row, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <View style={styles.rowHeader}>
-          <Text style={styles.label}>{item.label}</Text>
-          <Text style={styles.phonetic}>{item.phoneticText}</Text>
+          <Text style={[styles.label, { color: colors.primary }]}>{item.label}</Text>
+          <Text style={[styles.phonetic, { color: colors.text }]}>{item.phoneticText}</Text>
         </View>
-        <Text style={styles.unavailableText}>Pronunciation not available</Text>
+        <Text style={[styles.unavailableText, { color: colors.textSecondary }]}>Pronunciation not available</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       <View style={styles.rowHeader}>
-        <View style={styles.labelBadge}>
-          <Text style={styles.label}>{item.label}</Text>
+        <View style={[styles.labelBadge, { backgroundColor: isDark ? '#1D2A47' : '#EFF6FF' }]}>
+          <Text style={[styles.label, { color: colors.primary }]}>{item.label}</Text>
         </View>
-        <Text style={styles.phonetic}>{item.phoneticText}</Text>
+        <Text style={[styles.phonetic, { color: colors.text }]}>{item.phoneticText}</Text>
       </View>
 
       <View style={styles.statusRow}>
@@ -122,16 +137,18 @@ function PronunciationRow({ item }: { item: PronunciationItem }) {
           <View
             style={[
               styles.statusDot,
-              isPlaying && styles.statusDotPlaying,
-              isPaused && styles.statusDotPaused,
-              playback.error && isActive && styles.statusDotError,
+              { backgroundColor: colors.textSecondary },
+              isPlaying && { backgroundColor: colors.success },
+              isPaused && { backgroundColor: '#F59E0B' },
+              playback.error && isActive && { backgroundColor: colors.error },
             ]}
           />
         )}
         <Text
           style={[
             styles.statusText,
-            playback.error && isActive && styles.statusTextError,
+            { color: colors.textSecondary },
+            playback.error && isActive && { color: colors.error },
           ]}
           accessibilityLiveRegion="polite"
         >
@@ -167,23 +184,26 @@ function PronunciationRow({ item }: { item: PronunciationItem }) {
 }
 
 export function PronunciationList({ pronunciations }: PronunciationListProps) {
+  const { colors } = useTheme();
   const hasPlayable = hasPlayablePronunciations(pronunciations);
 
   if (pronunciations.length === 0) {
     return (
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Pronunciations</Text>
-        <Text style={styles.unavailableText}>Pronunciation not available</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Pronunciations</Text>
+        <Text style={[styles.unavailableText, { color: colors.textSecondary }]}>Pronunciation not available</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Pronunciations</Text>
+      <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Pronunciations</Text>
 
       {!hasPlayable && (
-        <Text style={styles.unavailableBanner}>Pronunciation not available</Text>
+        <Text style={[styles.unavailableBanner, { backgroundColor: colors.surfaceLight, borderColor: colors.border, color: colors.textSecondary }]}>
+          Pronunciation not available
+        </Text>
       )}
 
       <View style={styles.list}>
@@ -203,29 +223,23 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: typography.caption,
     fontWeight: '700',
-    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   unavailableBanner: {
     fontSize: typography.caption,
-    color: colors.textSecondary,
-    fontStyle: 'italic',
-    backgroundColor: '#F8FAFC',
     padding: spacing.md,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: colors.border,
+    fontStyle: 'italic',
   },
   list: {
     gap: spacing.md,
   },
   row: {
-    backgroundColor: colors.surface,
     borderRadius: 14,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
     gap: spacing.sm,
   },
   rowHeader: {
@@ -233,7 +247,6 @@ const styles = StyleSheet.create({
   },
   labelBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: '#EFF6FF',
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: 6,
@@ -241,12 +254,10 @@ const styles = StyleSheet.create({
   label: {
     fontSize: typography.small,
     fontWeight: '700',
-    color: colors.primary,
     textTransform: 'uppercase',
   },
   phonetic: {
     fontSize: typography.body,
-    color: colors.text,
     fontStyle: 'italic',
   },
   statusRow: {
@@ -258,24 +269,10 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.textSecondary,
-  },
-  statusDotPlaying: {
-    backgroundColor: colors.success,
-  },
-  statusDotPaused: {
-    backgroundColor: '#F59E0B',
-  },
-  statusDotError: {
-    backgroundColor: colors.error,
   },
   statusText: {
     fontSize: typography.caption,
-    color: colors.textSecondary,
     fontWeight: '600',
-  },
-  statusTextError: {
-    color: colors.error,
   },
   controls: {
     flexDirection: 'row',
@@ -290,29 +287,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: 10,
-    backgroundColor: '#EFF6FF',
     minHeight: 40,
     minWidth: 88,
     justifyContent: 'center',
   },
-  controlButtonPressed: {
-    backgroundColor: '#DBEAFE',
-  },
-  controlButtonDisabled: {
-    backgroundColor: '#F1F5F9',
-    opacity: 0.7,
-  },
   controlLabel: {
     fontSize: typography.caption,
     fontWeight: '600',
-    color: colors.primary,
-  },
-  controlLabelDisabled: {
-    color: colors.textSecondary,
   },
   unavailableText: {
     fontSize: typography.caption,
-    color: colors.textSecondary,
     fontStyle: 'italic',
   },
 });

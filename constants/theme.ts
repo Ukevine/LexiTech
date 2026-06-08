@@ -1,8 +1,9 @@
-export const colors = {
+export const lightColors = {
   primary: '#2563EB',
   primaryDark: '#1D4ED8',
   background: '#F8FAFC',
   surface: '#FFFFFF',
+  surfaceLight: '#F1F5F9',
   text: '#0F172A',
   textSecondary: '#64748B',
   border: '#E2E8F0',
@@ -11,6 +12,24 @@ export const colors = {
   success: '#16A34A',
   accent: '#7C3AED',
 };
+
+export const darkColors = {
+  primary: '#3B82F6',
+  primaryDark: '#2563EB',
+  background: '#0F172A',
+  surface: '#1E293B',
+  surfaceLight: '#334155',
+  text: '#F8FAFC',
+  textSecondary: '#94A3B8',
+  border: '#334155',
+  error: '#EF4444',
+  errorBackground: '#2E181B',
+  success: '#10B981',
+  accent: '#A78BFA',
+};
+
+// Legacy fallback (points to light colors by default)
+export const colors = lightColors;
 
 export const spacing = {
   xs: 4,

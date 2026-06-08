@@ -8,7 +8,8 @@ import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { ErrorView } from '../../components/ErrorView';
 import { WordDetails } from '../../components/WordDetails';
 import { useWordSearch } from '../../hooks/useWordSearch';
-import { colors, spacing } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
+import { spacing } from '../../constants/theme';
 import { sanitizeSearchInput } from '../../utils/validation';
 
 export default function WordScreen() {
@@ -17,6 +18,7 @@ export default function WordScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { loading, result, error, searchWord } = useWordSearch();
+  const { colors } = useTheme();
 
   const word = sanitizeSearchInput(q);
 
@@ -50,8 +52,8 @@ export default function WordScreen() {
   };
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
-      <View style={styles.searchSection}>
+    <View style={[styles.container, { backgroundColor: colors.background, paddingBottom: insets.bottom }]}>
+      <View style={[styles.searchSection, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <SearchBar initialValue={word} loading={loading} onSearch={handleSearch} />
       </View>
 
@@ -88,14 +90,11 @@ export default function WordScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   searchSection: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   content: {
     flex: 1,

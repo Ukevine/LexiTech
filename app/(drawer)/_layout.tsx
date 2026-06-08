@@ -1,8 +1,10 @@
 import { Drawer } from 'expo-router/drawer';
 import { CustomDrawerContent } from '../../components/CustomDrawerContent';
-import { colors } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function DrawerLayout() {
+  const { colors } = useTheme();
+
   return (
     <Drawer
       drawerContent={(props) => <CustomDrawerContent {...props} />}
@@ -30,3 +32,4 @@ export default function DrawerLayout() {
     </Drawer>
   );
 }
+

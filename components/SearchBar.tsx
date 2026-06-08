@@ -7,8 +7,9 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, typography } from '../constants/theme';
-import { isValidEnglishWord, VALIDATION_MESSAGE } from '../utils/validation';
+import { useTheme } from '../context/ThemeContext';
+import { spacing, typography } from '../constants/theme';
+import { getValidationError } from '../utils/validation';
 
 interface SearchBarProps {
   initialValue?: string;
@@ -17,6 +18,7 @@ interface SearchBarProps {
 }
 
 export function SearchBar({ initialValue = '', loading = false, onSearch }: SearchBarProps) {
+  const { colors } = useTheme();
   const [query, setQuery] = useState(initialValue);
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -29,8 +31,9 @@ export function SearchBar({ initialValue = '', loading = false, onSearch }: Sear
       return;
     }
 
-    if (!isValidEnglishWord(query)) {
-      setValidationError(VALIDATION_MESSAGE);
+    const error = getValidationError(query);
+    if (error) {
+      setValidationError(error);
       return;
     }
 
@@ -40,7 +43,7 @@ export function SearchBar({ initialValue = '', loading = false, onSearch }: Sear
 
   return (
     <View style={styles.container}>
-      <View style={styles.inputRow}>
+      <View style={[styles.inputRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <Ionicons
           name="search"
           size={20}
@@ -48,7 +51,7 @@ export function SearchBar({ initialValue = '', loading = false, onSearch }: Sear
           style={styles.searchIcon}
         />
         <TextInput
-          style={styles.input}
+          style={[styles.input, { color: colors.text }]}
           value={query}
           onChangeText={(text) => {
             setQuery(text);
@@ -66,9 +69,23 @@ export function SearchBar({ initialValue = '', loading = false, onSearch }: Sear
           accessibilityLabel="Search for a word"
           accessibilityHint="Enter an English word to look up its definition"
         />
+        {query.length > 0 && (
+          <Pressable
+            onPress={() => {
+              setQuery('');
+              setValidationError(null);
+            }}
+            style={styles.clearButton}
+            accessibilityRole="button"
+            accessibilityLabel="Clear search text"
+          >
+            <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
+          </Pressable>
+        )}
         <Pressable
           style={({ pressed }) => [
             styles.searchButton,
+            { backgroundColor: colors.primary },
             (loading || pressed) && styles.searchButtonDisabled,
           ]}
           onPress={handleSearch}
@@ -77,11 +94,11 @@ export function SearchBar({ initialValue = '', loading = false, onSearch }: Sear
           accessibilityLabel="Search"
           accessibilityState={{ disabled: loading }}
         >
-          <Ionicons name="arrow-forward" size={20} color={colors.surface} />
+          <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
         </Pressable>
       </View>
       {validationError && (
-        <Text style={styles.errorText} accessibilityRole="alert">
+        <Text style={[styles.errorText, { color: colors.error }]} accessibilityRole="alert">
           {validationError}
         </Text>
       )}
@@ -96,10 +113,8 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingLeft: spacing.md,
     paddingRight: spacing.xs,
     minHeight: 52,
@@ -110,11 +125,15 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: typography.body,
-    color: colors.text,
     paddingVertical: spacing.md,
   },
+  clearButton: {
+    padding: spacing.xs,
+    marginRight: spacing.xs,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   searchButton: {
-    backgroundColor: colors.primary,
     borderRadius: 10,
     width: 44,
     height: 44,
@@ -125,7 +144,6 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   errorText: {
-    color: colors.error,
     fontSize: typography.caption,
     marginLeft: spacing.xs,
   },

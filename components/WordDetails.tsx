@@ -1,7 +1,8 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { GroupedMeaning, PronunciationItem } from '../types/dictionary';
-import { colors, spacing, typography } from '../constants/theme';
+import { useTheme } from '../context/ThemeContext';
+import { spacing, typography } from '../constants/theme';
 import { PronunciationList } from './PronunciationList';
 
 interface WordDetailsProps {
@@ -11,41 +12,49 @@ interface WordDetailsProps {
 }
 
 export function WordDetails({ word, pronunciations, groupedMeanings }: WordDetailsProps) {
+  const { colors, isDark } = useTheme();
+
   return (
     <ScrollView
       style={styles.scrollView}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.word} accessibilityRole="header">
+      <Text style={[styles.word, { color: colors.text }]} accessibilityRole="header">
         {word}
       </Text>
 
       <PronunciationList pronunciations={pronunciations} />
 
       <View style={styles.meaningsSection}>
-        <Text style={styles.sectionTitle}>Meanings</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Meanings</Text>
 
         {groupedMeanings.length === 0 ? (
-          <Text style={styles.emptyText}>No meanings available.</Text>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No meanings available.</Text>
         ) : (
           groupedMeanings.map((group) => (
             <View
               key={group.partOfSpeech}
-              style={styles.meaningBlock}
+              style={[
+                styles.meaningBlock,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                },
+              ]}
               accessibilityLabel={`${group.partOfSpeech} meanings`}
             >
-              <View style={styles.partOfSpeechBadge}>
-                <Text style={styles.partOfSpeech}>{group.partOfSpeech}</Text>
+              <View style={[styles.partOfSpeechBadge, { backgroundColor: isDark ? '#2E224F' : '#EDE9FE' }]}>
+                <Text style={[styles.partOfSpeech, { color: colors.accent }]}>{group.partOfSpeech}</Text>
               </View>
 
               {group.definitions.map((def, defIndex) => (
                 <View key={`${group.partOfSpeech}-${defIndex}`} style={styles.definitionBlock}>
-                  <Text style={styles.definitionNumber}>{defIndex + 1}.</Text>
+                  <Text style={[styles.definitionNumber, { color: colors.primary }]}>{defIndex + 1}.</Text>
                   <View style={styles.definitionContent}>
-                    <Text style={styles.definition}>{def.definition}</Text>
-                    <Text style={styles.exampleLabel}>Example</Text>
-                    <Text style={styles.example}>
+                    <Text style={[styles.definition, { color: colors.text }]}>{def.definition}</Text>
+                    <Text style={[styles.exampleLabel, { color: colors.textSecondary }]}>Example</Text>
+                    <Text style={[styles.example, { color: colors.textSecondary }]}>
                       {def.example?.trim()
                         ? `"${def.example.trim()}"`
                         : 'No example available'}
@@ -71,7 +80,6 @@ const styles = StyleSheet.create({
   word: {
     fontSize: typography.title,
     fontWeight: '800',
-    color: colors.text,
     letterSpacing: -0.5,
     marginBottom: spacing.lg,
   },
@@ -81,26 +89,21 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: typography.caption,
     fontWeight: '700',
-    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   emptyText: {
     fontSize: typography.body,
-    color: colors.textSecondary,
     fontStyle: 'italic',
   },
   meaningBlock: {
-    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
     marginBottom: spacing.sm,
   },
   partOfSpeechBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: '#EDE9FE',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: 8,
@@ -109,7 +112,6 @@ const styles = StyleSheet.create({
   partOfSpeech: {
     fontSize: typography.caption,
     fontWeight: '700',
-    color: colors.accent,
     textTransform: 'capitalize',
   },
   definitionBlock: {
@@ -120,7 +122,6 @@ const styles = StyleSheet.create({
   definitionNumber: {
     fontSize: typography.body,
     fontWeight: '700',
-    color: colors.primary,
     minWidth: 24,
   },
   definitionContent: {
@@ -129,20 +130,17 @@ const styles = StyleSheet.create({
   },
   definition: {
     fontSize: typography.body,
-    color: colors.text,
     lineHeight: 24,
   },
   exampleLabel: {
     fontSize: typography.small,
     fontWeight: '700',
-    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
     marginTop: spacing.xs,
   },
   example: {
     fontSize: typography.caption,
-    color: colors.textSecondary,
     fontStyle: 'italic',
     lineHeight: 20,
   },

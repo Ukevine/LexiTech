@@ -10,7 +10,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSearchHistory } from '../context/SearchHistoryContext';
-import { colors, spacing, typography } from '../constants/theme';
+import { useTheme } from '../context/ThemeContext';
+import { spacing, typography } from '../constants/theme';
 
 interface CustomDrawerContentProps {
   navigation: {
@@ -23,6 +24,7 @@ export function CustomDrawerContent(props: CustomDrawerContentProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { history, clearHistory } = useSearchHistory();
+  const { colors, toggleTheme, isDark } = useTheme();
 
   const handleHistoryPress = (word: string) => {
     props.navigation.closeDrawer();
@@ -36,40 +38,68 @@ export function CustomDrawerContent(props: CustomDrawerContentProps) {
 
   return (
     <ScrollView
-      contentContainerStyle={[styles.container, { paddingTop: insets.top + spacing.md }]}
+      contentContainerStyle={[
+        styles.container,
+        {
+          paddingTop: insets.top + spacing.md,
+          backgroundColor: colors.background,
+        },
+      ]}
+      style={{ backgroundColor: colors.background }}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.header}>
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Ionicons name="book" size={28} color={colors.primary} />
-        <Text style={styles.appTitle}>LexiTech Dictionary</Text>
+        <Text style={[styles.appTitle, { color: colors.text }]}>LexiTech</Text>
       </View>
 
+      {/* Search Nav Item */}
       <Pressable
-        style={({ pressed }) => [styles.navItem, pressed && styles.navItemPressed]}
+        style={({ pressed }) => [
+          styles.navItem,
+          pressed && { backgroundColor: colors.surfaceLight },
+        ]}
         onPress={handleHomePress}
         accessibilityRole="button"
         accessibilityLabel="Go to search"
       >
         <Ionicons name="search" size={20} color={colors.text} />
-        <Text style={styles.navItemText}>Search</Text>
+        <Text style={[styles.navItemText, { color: colors.text }]}>Search</Text>
       </Pressable>
 
+      {/* Theme Toggle Nav Item */}
+      <Pressable
+        style={({ pressed }) => [
+          styles.navItem,
+          pressed && { backgroundColor: colors.surfaceLight },
+        ]}
+        onPress={toggleTheme}
+        accessibilityRole="button"
+        accessibilityLabel={`Switch to ${isDark ? 'light' : 'dark'} theme`}
+      >
+        <Ionicons name={isDark ? 'sunny-outline' : 'moon-outline'} size={20} color={colors.text} />
+        <Text style={[styles.navItemText, { color: colors.text }]}>
+          {isDark ? 'Light Mode' : 'Dark Mode'}
+        </Text>
+      </Pressable>
+
+      {/* History Section */}
       <View style={styles.historySection}>
         <View style={styles.historyHeader}>
-          <Text style={styles.historyTitle}>Search History</Text>
+          <Text style={[styles.historyTitle, { color: colors.textSecondary }]}>Search History</Text>
           {history.length > 0 && (
             <Pressable
               onPress={clearHistory}
               accessibilityRole="button"
               accessibilityLabel="Clear search history"
             >
-              <Text style={styles.clearText}>Clear</Text>
+              <Text style={[styles.clearText, { color: colors.primary }]}>Clear</Text>
             </Pressable>
           )}
         </View>
 
         {history.length === 0 ? (
-          <Text style={styles.emptyHistory}>No search history yet</Text>
+          <Text style={[styles.emptyHistory, { color: colors.textSecondary }]}>No search history yet</Text>
         ) : (
           <ScrollView style={styles.historyList} nestedScrollEnabled>
             {history.map((word) => (
@@ -77,14 +107,14 @@ export function CustomDrawerContent(props: CustomDrawerContentProps) {
                 key={word}
                 style={({ pressed }) => [
                   styles.historyItem,
-                  pressed && styles.historyItemPressed,
+                  pressed && { backgroundColor: colors.surfaceLight },
                 ]}
                 onPress={() => handleHistoryPress(word)}
                 accessibilityRole="button"
                 accessibilityLabel={`Search for ${word}`}
               >
                 <Ionicons name="time-outline" size={18} color={colors.textSecondary} />
-                <Text style={styles.historyWord}>{word}</Text>
+                <Text style={[styles.historyWord, { color: colors.text }]}>{word}</Text>
               </Pressable>
             ))}
           </ScrollView>
@@ -106,12 +136,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     paddingBottom: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   appTitle: {
     fontSize: typography.heading,
     fontWeight: '700',
-    color: colors.text,
   },
   navItem: {
     flexDirection: 'row',
@@ -120,20 +148,16 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.sm,
     borderRadius: 10,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
     minHeight: 48,
-  },
-  navItemPressed: {
-    backgroundColor: colors.border,
   },
   navItemText: {
     fontSize: typography.body,
     fontWeight: '600',
-    color: colors.text,
   },
   historySection: {
     flex: 1,
-    marginTop: spacing.sm,
+    marginTop: spacing.md,
   },
   historyHeader: {
     flexDirection: 'row',
@@ -144,18 +168,15 @@ const styles = StyleSheet.create({
   historyTitle: {
     fontSize: typography.caption,
     fontWeight: '700',
-    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   clearText: {
     fontSize: typography.caption,
-    color: colors.primary,
     fontWeight: '600',
   },
   emptyHistory: {
     fontSize: typography.caption,
-    color: colors.textSecondary,
     fontStyle: 'italic',
     paddingVertical: spacing.md,
   },
@@ -171,11 +192,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     minHeight: 48,
   },
-  historyItemPressed: {
-    backgroundColor: '#EFF6FF',
-  },
   historyWord: {
     fontSize: typography.body,
-    color: colors.text,
   },
 });
