@@ -25,6 +25,27 @@ export interface DictionaryEntry {
   sourceUrls?: string[];
 }
 
+export interface PronunciationItem {
+  id: string;
+  label: string;
+  phoneticText: string;
+  audioUrl: string | null;
+  hasPlayableAudio: boolean;
+}
+
+export interface GroupedMeaning {
+  partOfSpeech: string;
+  definitions: Definition[];
+}
+
+export type PlaybackStatus = 'stopped' | 'loading' | 'playing' | 'paused' | 'error';
+
+export interface AudioPlaybackState {
+  activeId: string | null;
+  status: PlaybackStatus;
+  error: string | null;
+}
+
 export type SearchErrorType =
   | 'validation'
   | 'not_found'
@@ -41,6 +62,6 @@ export interface SearchError {
 
 export interface SearchResult {
   entries: DictionaryEntry[];
-  audioUrls: string[];
-  phoneticText: string;
+  pronunciations: PronunciationItem[];
+  groupedMeanings: GroupedMeaning[];
 }

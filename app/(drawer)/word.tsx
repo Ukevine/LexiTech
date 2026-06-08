@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from 'react';
+import { audioPlaybackService } from '../../services/audioService';
 import { StyleSheet, View } from 'react-native';
-import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SearchBar } from '../../components/SearchBar';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
@@ -12,6 +13,7 @@ import { sanitizeSearchInput } from '../../utils/validation';
 
 export default function WordScreen() {
   const { q } = useLocalSearchParams<{ q?: string }>();
+  const router = useRouter();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { loading, result, error, searchWord } = useWordSearch();
@@ -31,9 +33,20 @@ export default function WordScreen() {
     }
   }, [word, navigation, performSearch]);
 
+  useEffect(() => {
+    audioPlaybackService.stopAll();
+  }, [word]);
+
+  useEffect(() => {
+    return () => {
+      audioPlaybackService.stopAll();
+    };
+  }, []);
+
   const handleSearch = (newWord: string) => {
-    searchWord(newWord);
-    navigation.setOptions({ title: newWord });
+    const trimmed = newWord.trim();
+    router.setParams({ q: trimmed });
+    navigation.setOptions({ title: trimmed });
   };
 
   return (
@@ -55,9 +68,9 @@ export default function WordScreen() {
 
         {!loading && !error && result && (
           <WordDetails
-            entries={result.entries}
-            audioUrls={result.audioUrls}
-            phoneticText={result.phoneticText}
+            word={result.entries[0]?.word ?? word}
+            pronunciations={result.pronunciations}
+            groupedMeanings={result.groupedMeanings}
           />
         )}
 

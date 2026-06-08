@@ -2,9 +2,10 @@ import axios, { AxiosInstance } from 'axios';
 import {
   DictionaryEntry,
   Meaning,
-  Phonetic,
   SearchResult,
 } from '../types/dictionary';
+import { groupMeaningsByPartOfSpeech } from '../utils/meanings';
+import { extractPronunciations } from '../utils/pronunciation';
 import { encodeWordForApi } from '../utils/validation';
 import { parseApiError } from '../utils/errorHandler';
 
@@ -18,37 +19,6 @@ const apiClient: AxiosInstance = axios.create({
     Accept: 'application/json',
   },
 });
-
-function isValidUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url);
-    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
-  } catch {
-    return false;
-  }
-}
-
-function extractAudioUrls(phonetics: Phonetic[] | undefined, entryPhonetic?: string): string[] {
-  const urls = new Set<string>();
-
-  phonetics?.forEach((phonetic) => {
-    const audio = phonetic.audio?.trim();
-    if (audio && isValidUrl(audio)) {
-      urls.add(audio);
-    }
-  });
-
-  return Array.from(urls);
-}
-
-function extractPhoneticText(entry: DictionaryEntry): string {
-  if (entry.phonetic?.trim()) {
-    return entry.phonetic.trim();
-  }
-
-  const fromPhonetics = entry.phonetics?.find((p) => p.text?.trim())?.text?.trim();
-  return fromPhonetics ?? '';
-}
 
 function isValidEntry(entry: unknown): entry is DictionaryEntry {
   if (!entry || typeof entry !== 'object') {
@@ -64,23 +34,25 @@ function sanitizeMeanings(meanings: Meaning[] | undefined): Meaning[] {
     return [];
   }
 
-  return meanings
-    .map((meaning) => {
-      const definitions = (meaning.definitions ?? []).filter(
-        (def) => typeof def.definition === 'string' && def.definition.trim().length > 0
-      );
+  const sanitized: Meaning[] = [];
 
-      if (definitions.length === 0) {
-        return null;
-      }
+  for (const meaning of meanings) {
+    const definitions = (meaning.definitions ?? []).filter(
+      (def) => typeof def.definition === 'string' && def.definition.trim().length > 0
+    );
 
-      return {
-        ...meaning,
-        partOfSpeech: meaning.partOfSpeech?.trim() || 'unknown',
-        definitions,
-      };
-    })
-    .filter((meaning): meaning is Meaning => meaning !== null);
+    if (definitions.length === 0) {
+      continue;
+    }
+
+    sanitized.push({
+      ...meaning,
+      partOfSpeech: meaning.partOfSpeech?.trim() || 'unknown',
+      definitions,
+    });
+  }
+
+  return sanitized;
 }
 
 function parseEntries(data: unknown): DictionaryEntry[] {
@@ -108,20 +80,23 @@ export async function fetchWordDefinition(word: string): Promise<SearchResult> {
     const response = await apiClient.get<unknown>(`/${encodedWord}`);
     const entries = parseEntries(response.data);
 
-    const audioUrls = entries.flatMap((entry) =>
-      extractAudioUrls(entry.phonetics, entry.phonetic)
-    );
-    const uniqueAudioUrls = Array.from(new Set(audioUrls));
-
-    const phoneticText =
-      entries.map(extractPhoneticText).find((text) => text.length > 0) ?? '';
-
     return {
       entries,
-      audioUrls: uniqueAudioUrls,
-      phoneticText,
+      pronunciations: extractPronunciations(entries),
+      groupedMeanings: groupMeaningsByPartOfSpeech(entries),
     };
   } catch (error) {
+    if (error && typeof error === 'object' && 'type' in error && 'message' in error) {
+      throw error;
+    }
+
+    if (error instanceof Error && error.message.includes('Invalid')) {
+      throw {
+        type: 'invalid_response' as const,
+        message: parseApiError(error).message,
+      };
+    }
+
     throw parseApiError(error);
   }
 }

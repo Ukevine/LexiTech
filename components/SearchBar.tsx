@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -19,6 +19,10 @@ interface SearchBarProps {
 export function SearchBar({ initialValue = '', loading = false, onSearch }: SearchBarProps) {
   const [query, setQuery] = useState(initialValue);
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setQuery(initialValue);
+  }, [initialValue]);
 
   const handleSearch = () => {
     if (loading) {

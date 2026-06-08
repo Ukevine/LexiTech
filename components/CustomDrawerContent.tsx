@@ -6,17 +6,20 @@ import {
   Text,
   View,
 } from 'react-native';
-import {
-  DrawerContentScrollView,
-  DrawerContentComponentProps,
-} from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSearchHistory } from '../context/SearchHistoryContext';
 import { colors, spacing, typography } from '../constants/theme';
 
-export function CustomDrawerContent(props: DrawerContentComponentProps) {
+interface CustomDrawerContentProps {
+  navigation: {
+    closeDrawer: () => void;
+  };
+  [key: string]: unknown;
+}
+
+export function CustomDrawerContent(props: CustomDrawerContentProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { history, clearHistory } = useSearchHistory();
@@ -32,9 +35,9 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
   };
 
   return (
-    <DrawerContentScrollView
-      {...props}
+    <ScrollView
       contentContainerStyle={[styles.container, { paddingTop: insets.top + spacing.md }]}
+      showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
         <Ionicons name="book" size={28} color={colors.primary} />
@@ -87,7 +90,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
           </ScrollView>
         )}
       </View>
-    </DrawerContentScrollView>
+    </ScrollView>
   );
 }
 

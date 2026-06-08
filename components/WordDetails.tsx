@@ -1,47 +1,50 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { DictionaryEntry } from '../types/dictionary';
+import { GroupedMeaning, PronunciationItem } from '../types/dictionary';
 import { colors, spacing, typography } from '../constants/theme';
-import { PronunciationButton } from './PronunciationButton';
+import { PronunciationList } from './PronunciationList';
 
 interface WordDetailsProps {
-  entries: DictionaryEntry[];
-  audioUrls: string[];
-  phoneticText: string;
+  word: string;
+  pronunciations: PronunciationItem[];
+  groupedMeanings: GroupedMeaning[];
 }
 
-export function WordDetails({ entries, audioUrls, phoneticText }: WordDetailsProps) {
-  const mainWord = entries[0]?.word ?? '';
-
+export function WordDetails({ word, pronunciations, groupedMeanings }: WordDetailsProps) {
   return (
     <ScrollView
       style={styles.scrollView}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.header}>
-        <Text style={styles.word} accessibilityRole="header">
-          {mainWord}
-        </Text>
-        <PronunciationButton audioUrls={audioUrls} phoneticText={phoneticText} />
-      </View>
+      <Text style={styles.word} accessibilityRole="header">
+        {word}
+      </Text>
 
-      {entries.map((entry, entryIndex) => (
-        <View key={`${entry.word}-${entryIndex}`}>
-          {(entry.meanings ?? []).map((meaning, meaningIndex) => (
+      <PronunciationList pronunciations={pronunciations} />
+
+      <View style={styles.meaningsSection}>
+        <Text style={styles.sectionTitle}>Meanings</Text>
+
+        {groupedMeanings.length === 0 ? (
+          <Text style={styles.emptyText}>No meanings available.</Text>
+        ) : (
+          groupedMeanings.map((group) => (
             <View
-              key={`${meaning.partOfSpeech}-${meaningIndex}`}
+              key={group.partOfSpeech}
               style={styles.meaningBlock}
+              accessibilityLabel={`${group.partOfSpeech} meanings`}
             >
               <View style={styles.partOfSpeechBadge}>
-                <Text style={styles.partOfSpeech}>{meaning.partOfSpeech}</Text>
+                <Text style={styles.partOfSpeech}>{group.partOfSpeech}</Text>
               </View>
 
-              {(meaning.definitions ?? []).map((def, defIndex) => (
-                <View key={defIndex} style={styles.definitionBlock}>
+              {group.definitions.map((def, defIndex) => (
+                <View key={`${group.partOfSpeech}-${defIndex}`} style={styles.definitionBlock}>
                   <Text style={styles.definitionNumber}>{defIndex + 1}.</Text>
                   <View style={styles.definitionContent}>
                     <Text style={styles.definition}>{def.definition}</Text>
+                    <Text style={styles.exampleLabel}>Example</Text>
                     <Text style={styles.example}>
                       {def.example?.trim()
                         ? `"${def.example.trim()}"`
@@ -51,9 +54,9 @@ export function WordDetails({ entries, audioUrls, phoneticText }: WordDetailsPro
                 </View>
               ))}
             </View>
-          ))}
-        </View>
-      ))}
+          ))
+        )}
+      </View>
     </ScrollView>
   );
 }
@@ -65,23 +68,35 @@ const styles = StyleSheet.create({
   content: {
     paddingBottom: spacing.xl,
   },
-  header: {
-    marginBottom: spacing.lg,
-    gap: spacing.sm,
-  },
   word: {
     fontSize: typography.title,
     fontWeight: '800',
     color: colors.text,
     letterSpacing: -0.5,
+    marginBottom: spacing.lg,
+  },
+  meaningsSection: {
+    gap: spacing.md,
+  },
+  sectionTitle: {
+    fontSize: typography.caption,
+    fontWeight: '700',
+    color: colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  emptyText: {
+    fontSize: typography.body,
+    color: colors.textSecondary,
+    fontStyle: 'italic',
   },
   meaningBlock: {
-    marginBottom: spacing.lg,
     backgroundColor: colors.surface,
     borderRadius: 16,
     padding: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
+    marginBottom: spacing.sm,
   },
   partOfSpeechBadge: {
     alignSelf: 'flex-start',
@@ -116,6 +131,14 @@ const styles = StyleSheet.create({
     fontSize: typography.body,
     color: colors.text,
     lineHeight: 24,
+  },
+  exampleLabel: {
+    fontSize: typography.small,
+    fontWeight: '700',
+    color: colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    marginTop: spacing.xs,
   },
   example: {
     fontSize: typography.caption,
